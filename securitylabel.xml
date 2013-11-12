@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<securitylabel>
+  <classification>COMMERCIAL</classification>
+  <decorator>IN CONFIDENCE</decorator>
+  <groups>
+    <group>STAFF</group>
+  </groups>
+  <countries>
+    <country>UK</country>
+  </countries>
+</securitylabel>
