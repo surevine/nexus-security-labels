@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+#
+# Prints the contents of all XML tags matching the name passed in.
+#
 
 import sys
 import xml.etree.ElementTree as etree

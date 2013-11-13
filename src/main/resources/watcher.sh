@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # Monitors a directory for changes since last check.
 #

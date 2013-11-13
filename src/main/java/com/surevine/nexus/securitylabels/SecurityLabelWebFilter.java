@@ -54,7 +54,7 @@ public class SecurityLabelWebFilter extends AbstractShiroFilter {
 		final String uri = request.getRequestURI();
 		
 		if (uri.startsWith(REPO_CONTEXT)) {
-			//FIXME: Only strip first /content/
+			//FIXME: Only strip first /content/ in case someone has content in a groupId.
 			Path path = Paths.get(root +uri.substring(REPO_CONTEXT.length()).replaceAll("/content/", "/"));
 			if (path.toFile().isFile()) {
 				path = path.getParent();
