@@ -1,4 +1,6 @@
+                                                                                      99,1          Bot
 #!/bin/bash
+
 #
 # Monitors a directory for changes since last check.
 #
@@ -38,6 +40,7 @@ for LABEL in ${FILES[@]}; do
   PACKAGING=$(get_xml "$POM" "packaging" "false")
   ARTIFACT_ID=$(get_xml "$POM" "artifactId" "false")
   GROUP_ID=$(get_xml "$POM" "groupId" "false")
+  VERSION=$(get_xml "$POM" "version" "false")
   CLASSIFICATION=$(get_xml "$LABEL" "classification" "true")
   DECORATOR=$(get_xml "$LABEL" "decorator" "true")
   GRPS=$(get_xml "$LABEL" "group" "true")
@@ -53,20 +56,45 @@ for LABEL in ${FILES[@]}; do
   fi
 
   BASE_DIR=$(dirname $POM)
-  TARGET="${POM::${#POM}-3}${FILE_EXT}"
-  #TARGET=$(find $BASE_DIR -name "*.$FILE_EXT")
+  POM_FNAME=$(basename $POM)
+  POM_NAME="${POM_FNAME::${#POM_FNAME}-4}"
+  TARGET="${POM_NAME}.${FILE_EXT}"
+  TMP_DIR="/tmp/gateway/$POM_NAME"
 
-  echo "Pushing groupId $GROUP_ID artifactId $ARTIFACT_ID packaging $PACKAGING with label $CLASSIFICATION $DECORATOR $GRPS $COUNTRIES for $TARGET"
+  mkdir -p "${TMP_DIR}"
+  cd "${TMP_DIR}"
 
-  # Push primary file and security label to gateway
-#  curl -X POST -F "repository=$REPOSITORY" \
-#    -F "groupId=$GROUP_ID" \
-#    -F "artifactId=$ARTIFACT_ID" \
-#    -F "version=$VERSION" \
-#    -F "packaging=$PACKAGING" \
-#    -F "classification=$CLASSIFICATION" \
-#    -F "decorator=$DECORATOR" \
-#    -F "groups=$GRPS" \
-#    -F "countries=$COUNTRIES" \
-#    http://$GATEWAY_HOST/gateway/
+  # Write out our metadata file
+  # Should probably be using arrays rather than CSVs
+  echo "{
+  \"repository\": \"$REPOSITORY\",
+  \"groupId\": \"$GROUP_ID\",
+  \"artifactId\": \"$ARTIFACT_ID\",
+  \"version\": \"$VERSION\",
+  \"packaging\": \"$PACKAGING\",
+  \"classification\": \"$CLASSIFICATION\",
+  \"decorator\": \"$DECORATOR\",
+  \"groups\": \"$GRPS\",
+  \"countries\": \"$COUNTRIES\",
+  \"source_type\": \"NEXUS\"
+}" > ".metadata.json"
+
+  echo "FYI, here's the metadata.json:"
+  cat .metadata.json
+  echo
+
+  # Copy the content next to the metadata
+  cp "$BASE_DIR/$TARGET" "$(basename $TARGET)"
+
+  # Build our export package to send to gateway
+  tar cvzf "$POM_NAME.tgz" "$(basename $TARGET)" ".metadata.json"
+
+  # POST export package to gateway
+  curl -X POST \
+    -F "filename=$POM_NAME.tgz" \
+    -F "file=@$POM_NAME.tgz" \
+    http://$GATEWAY_HOST/gateway/api/gw/
+
+  cd -
+  rm -rf "${TMP_DIR}"
 done
