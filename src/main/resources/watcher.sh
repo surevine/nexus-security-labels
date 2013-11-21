@@ -79,21 +79,17 @@ for LABEL in ${FILES[@]}; do
   \"source_type\": \"NEXUS\"
 }" > ".metadata.json"
 
-  echo "FYI, here's the metadata.json:"
-  cat .metadata.json
-  echo
-
   # Copy the content next to the metadata
   cp "$BASE_DIR/$TARGET" "$(basename $TARGET)"
 
   # Build our export package to send to gateway
-  tar cvzf "$POM_NAME.tgz" "$(basename $TARGET)" ".metadata.json"
+  tar czf "$POM_NAME.tgz" "$(basename $TARGET)" ".metadata.json"
 
   # POST export package to gateway
   curl -X POST \
     -F "filename=$POM_NAME.tgz" \
     -F "file=@$POM_NAME.tgz" \
-    http://$GATEWAY_HOST/gateway/api/gw/
+    http://$GATEWAY_HOST/gateway/api/export/
 
   cd -
   rm -rf "${TMP_DIR}"
