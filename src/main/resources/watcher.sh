@@ -11,23 +11,28 @@
 
 set -e
 
-GATEWAY_HOST="10.66.2.231"
+GATEWAY_HOST="127.0.0.1"
 REPO_PATH="$1"
-MONITOR_F="/tmp/.nm-$(echo -n "$REPO_PATH" | shasum | awk '{print $1}')"
+MONITOR_F="/tmp/.nm-$(echo -n "$REPO_PATH" | md5sum | awk '{print $1}')"
 
 function find_files {
   if [[ ! -f $MONITOR_F ]]; then
     echo "Warning. First use returns all files."
-    FILES=($(find $REPO_PATH/* -type f -name "*-securitylabel.xml" | grep -v ".nexus/trash"))
+    FILES=($(find $REPO_PATH/* -type f -name "*-securitylabel.xml" | grep -v "\.nexus/"))
   else
-    FILES=($(find $REPO_PATH/* -type f -cnewer $MONITOR_F -name "*-securitylabel.xml" | grep -v ".nexus/trash"))
+    FILES=($(find $REPO_PATH/* -type f -cnewer $MONITOR_F -name "*-securitylabel.xml" | grep -v "\.nexus/"))
   fi
 
   touch $MONITOR_F
 }
 
 function get_xml {
-  local result="$(./parsexml.py $1 $2 $3 | tr '\n' ',' | sed 's/,$//g')"
+  local result="$(./parsexml.sh $1 $2 $3 | tr '\n' ',' | sed 's/,$//g')"
+  echo $result
+}
+
+function get_mvn {
+  local result="$(./parsexml.py $1 $2)"
   echo $result
 }
 
@@ -37,10 +42,10 @@ for LABEL in ${FILES[@]}; do
   POM=$(echo $LABEL | sed 's/-securitylabel\.xml$/.pom/') # pom.xml
 
   # Find primary file
-  PACKAGING=$(get_xml "$POM" "packaging" "false")
-  ARTIFACT_ID=$(get_xml "$POM" "artifactId" "false")
-  GROUP_ID=$(get_xml "$POM" "groupId" "false")
-  VERSION=$(get_xml "$POM" "version" "false")
+  PACKAGING=$(get_mvn "$POM" "packaging")
+  ARTIFACT_ID=$(get_mvn "$POM" "artifactId")
+  GROUP_ID=$(get_mvn "$POM" "groupId")
+  VERSION=$(get_mvn "$POM" "version")
   CLASSIFICATION=$(get_xml "$LABEL" "classification" "true")
   DECORATOR=$(get_xml "$LABEL" "decorator" "true")
   GRPS=$(get_xml "$LABEL" "group" "true")
@@ -79,6 +84,8 @@ for LABEL in ${FILES[@]}; do
   \"source_type\": \"NEXUS\"
 }" > ".metadata.json"
 
+  cat .metadata.json
+
   # Copy the content next to the metadata
   cp "$BASE_DIR/$TARGET" "$(basename $TARGET)"
 
@@ -89,6 +96,16 @@ for LABEL in ${FILES[@]}; do
   curl -X POST \
     -F "filename=$POM_NAME.tgz" \
     -F "file=@$POM_NAME.tgz" \
+    -F "repository=$REPOSITORY" \
+    -F "groupId=$GROUP_ID" \
+    -F "artifactId=$ARTIFACT_ID" \
+    -F "version=$VERSION" \
+    -F "packaging=$PACKAGING" \
+    -F "classification=$CLASSIFICATION" \
+    -F "decorator=$DECORATOR" \
+    -F "groups=$GRPS" \
+    -F "countries=$COUNTRIES" \
+    -F "source_type=NEXUS" \
     http://$GATEWAY_HOST/gateway/api/export/
 
   cd -

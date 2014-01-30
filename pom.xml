@@ -23,7 +23,7 @@
 	<repositories>
 		<repository>
 			<id>dev-releases</id>
-			<url>http://10.66.2.130:8081/content/repositories/releases</url>
+			<url>http://10.66.2.218:8081/content/repositories/releases</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -33,7 +33,7 @@
 		</repository>
 		<repository>
 			<id>dev-snapshots</id>
-			<url>http://10.66.2.130:8081/content/repositories/snapshots</url>
+			<url>http://10.66.2.218:8081/content/repositories/snapshots</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -98,14 +98,14 @@
 		<repository>
 			<id>dev-releases</id>
 			<name>Dev releases</name>
-			<url>http://10.66.2.130:8081/nexus/content/repositories/releases</url>
+			<url>http://10.66.2.218:8081/nexus/content/repositories/releases</url>
 		</repository>
 
 		<!-- Publish snapshots here -->
 		<snapshotRepository>
 			<id>dev-snapshots</id>
 			<name>Dev snapshots</name>
-			<url>http://10.66.2.130:8081/nexus/content/repositories/snapshots</url>
+			<url>http://10.66.2.218:8081/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>
