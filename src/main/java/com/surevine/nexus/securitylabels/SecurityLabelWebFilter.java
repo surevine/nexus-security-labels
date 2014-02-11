@@ -53,6 +53,8 @@ public class SecurityLabelWebFilter extends AbstractShiroFilter {
 		final String root = System.getProperty("nexus-work") +"/storage";
 		final String uri = request.getRequestURI();
 		
+		System.out.println(((HttpServletRequest) req).getMethod() +" : " +uri);
+		
 		if (uri.startsWith(REPO_CONTEXT)) {
 			//FIXME: Only strip first /content/ in case someone has content in a groupId.
 			Path path = Paths.get(root +uri.substring(REPO_CONTEXT.length()).replaceAll("/content/", "/"));
